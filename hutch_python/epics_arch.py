@@ -35,7 +35,7 @@ def _create_parser():
     parser.add_argument('--level', '-l', required=False, type=str, default="INFO",
                         help='Show the debug logging stream')
 
-    parser.add_argument('--cds-items', nargs=2, action='store', default=None,
+    parser.add_argument('--cds-items', action='store_true', default=None,
                         help="Pulls all data from CDS tab. E.g.: xppx1003221 run21 X-10032")
 
     parser.add_argument('--link', '-sl', action='store_true', default=None, help="create softlink for experiement")
@@ -117,7 +117,8 @@ def create_arch_file(experiment, level=None, hutch=None, path=None, dry_run=Fals
         elif hutch:
             file_path = EPICS_ARCH_FILE_PATH.format(hutch.lower())
         elif cds_items:
-            pull_cds_data(experiment, cds_items)
+            print(cds_items)
+            pull_cds_data(experiment)
             return
         elif link:
             update_file(exp_name=experiment, path=EPICS_ARCH_FILE_PATH.format(experiment[0:3]))
@@ -130,9 +131,11 @@ def create_arch_file(experiment, level=None, hutch=None, path=None, dry_run=Fals
         print_dry_run(experiment)
 
 
-def pull_cds_data(exp, run):
+# def pull_cds_data(exp, run):
+def pull_cds_data(exp):
     logger.debug("in client")
-    pull_cds_items(exp, run)
+    # pull_cds_items(exp, run)
+    pull_cds_items(exp)
 
 
 def create_softlink(experiment):

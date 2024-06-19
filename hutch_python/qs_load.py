@@ -28,7 +28,8 @@ class QStruct:
     pvtype: str
 
 
-def pull_cds_items(exp, run):
+# def pull_cds_items(exp, run):
+def pull_cds_items(exp):
     """
     Gather all user obejcts from the CDS tab in the questionnaire.
     Parse objects and sperate them based on type.
@@ -52,25 +53,67 @@ def pull_cds_items(exp, run):
     create Pretty Table instance and if the values from the run data contain pcdssetup
     then put them into a seperate dictionary as they are cds items
     """
-    logger.debug('pull_cds_items(%s)', exp)
+    logger.debug('pull_cds_items:', exp)
     client = QuestionnaireClient()
-    logger.debug("in cds items, run numb:", str(run[1]))
-    runDetails_Dict = client.getProposalDetailsForRun(str(run[0]), str(run[1]))
+
+    formatted_run_id = ''
+
+    # handle formatting of proposal id, want: e.g. X-10032
+    # Case -  Expected Format: e.g. xppx1003221
+    if re.match('^.{4}[0-9]{7}$', exp):
+        logger.debug("experiment name format")
+        run_num = 'run'+exp[-2:]
+        logger.debug('run num', run_num)
+        run_hutch = str(exp[0:3])
+        logger.debug('run_hutch', run_hutch)
+        run_id = str(exp[3:-2])
+        logger.debug('run_id', run_id)
+        formatted_run_id = run_id.capitalize()
+        formatted_run_id = formatted_run_id[:1] + '-' + formatted_run_id[1:]
+
+    elif re.match('[A-Z]{1}-[0-9]{5}$', exp) or re.match('^[A-Z]{2}[0-9]{2}$', exp):
+        # Case - Proposal ID Format, have user enter run num manually
+        logger.debug("run_id format")
+        formatted_run_id = exp
+        run_num = 'run' + str(input('Please enter run number: '))
+    else:
+        print('Unrecognized format, please follow the prompts to find experiment data.')
+        run_num = input('Please enter run number: ')
+        formatted_run_id = input('Please enter proposal ID: ')
+
+    logger.debug('formatted run_id', formatted_run_id)
+    logger.debug('run_num', run_num)
+
+    matchedKey = ''
+
+    try:
+        runDetails_Dict = client.getProposalsListForRun(run_num)
+        for key, vals in runDetails_Dict.items():
+            logger.debug(formatted_run_id, key)
+            if str(key) == str(formatted_run_id):
+                logger.debug('matched key', key)
+                matchedKey = key
+
+    except Exception as e:
+        print("An invalid https request, please check the run number, proposal id and experiment number:", e)
+
+    runDetails_Dict = client.getProposalDetailsForRun(run_num, matchedKey)
+
     sorted_runDetails_Dict = dict(sorted(runDetails_Dict.items()))
     cds_dict = {}
     myTable = PrettyTable(["Alias", "PV Base", "Type"])
+
     for keys, vals in sorted_runDetails_Dict.items():
         if "pcdssetup" in keys:
             cds_dict[keys] = vals
 
-    """
-    names are as follows:
-    pcdssetup-motors, pcdssetup-areadet, pcdssetup-ao, pcdssetup-devs
-    pcdssetup-ps, pcdssetup-trig, pcdssetup-vacuum, pcdssetup-temp
+    # names are as follows:
+    # pcdssetup-motors, pcdssetup-areadet, pcdssetup-ao, pcdssetup-devs
+    # pcdssetup-ps, pcdssetup-trig, pcdssetup-vacuum, pcdssetup-temp
 
-    iterate through all cds items and label them based on their type
-    use the struct members to identify
-    """
+    # iterate through all cds items and label them based on their type
+    # use the struct members to identify
+
     displayList = []
     for k, v in cds_dict.items():
         if re.match('pcdssetup-motors.*-name', k):
