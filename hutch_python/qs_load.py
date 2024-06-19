@@ -66,8 +66,6 @@ def pull_cds_items(exp):
         logger.debug("experiment name format")
         run_num = 'run'+exp[-2:]
         logger.debug('run num', run_num)
-        run_hutch = str(exp[0:3])
-        logger.debug('run_hutch', run_hutch)
         run_id = str(exp[3:-2])
         logger.debug('run_id', run_id)
         formatted_run_id = run_id.capitalize()
