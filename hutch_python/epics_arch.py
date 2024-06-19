@@ -117,7 +117,6 @@ def create_arch_file(experiment, level=None, hutch=None, path=None, dry_run=Fals
         elif hutch:
             file_path = EPICS_ARCH_FILE_PATH.format(hutch.lower())
         elif cds_items:
-            print(cds_items)
             pull_cds_data(experiment)
             return
         elif link:

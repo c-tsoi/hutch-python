@@ -1,6 +1,7 @@
 import logging
 import os.path
 import re
+import sys
 from configparser import ConfigParser, NoOptionError
 from dataclasses import dataclass
 
@@ -53,6 +54,7 @@ def pull_cds_items(exp):
     create Pretty Table instance and if the values from the run data contain pcdssetup
     then put them into a seperate dictionary as they are cds items
     """
+
     logger.debug('pull_cds_items:', exp)
     client = QuestionnaireClient()
 
@@ -78,6 +80,7 @@ def pull_cds_items(exp):
         run_num = 'run' + str(input('Please enter run number: '))
     else:
         print('Unrecognized format, please follow the prompts to find experiment data.')
+
         run_num = input('Please enter run number: ')
         formatted_run_id = input('Please enter proposal ID: ')
 
@@ -96,8 +99,15 @@ def pull_cds_items(exp):
 
     except Exception as e:
         print("An invalid https request, please check the run number, proposal id and experiment number:", e)
+        sys.exit()
 
-    runDetails_Dict = client.getProposalDetailsForRun(run_num, matchedKey)
+    # questionnaireFlag = False
+    try:
+        runDetails_Dict = client.getProposalDetailsForRun(run_num, matchedKey)
+        # questionnaireFlag = True
+    except (Exception, UnboundLocalError) as e:
+        print('Could not find experiment, please check to make sure information is correct.', e)
+        sys.exit()
 
     sorted_runDetails_Dict = dict(sorted(runDetails_Dict.items()))
     cds_dict = {}
